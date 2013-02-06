@@ -31,8 +31,21 @@ class Election:
     def __init__(self):
         self.client = None
         self.candidate = None
+        self.isElectable = True
         self.comments = []
         self.voters = {}
+
+    """
+    Set direction of election
+
+        Arguments:
+
+            direction
+                Direction of election if true is passed candidate will
+                be elected otherwise he will be voted out
+    """
+    def elect(self, direction):
+        self.isElectable = bool(direction)
 
     """
     Sets candidate that should be voted on by voters
@@ -94,11 +107,11 @@ class Election:
     def begin(self):
         # Make sure election is properly setup
         try:
-            if (self.candidate is None):
+            if self.candidate is None:
                 raise Exception(
                     'A valid candidate must be provided prior to election'
                 )
-            elif (len(self.voters) == 0):
+            elif len(self.voters) == 0:
                 raise Exception(
                     'Voters must be setup prior to election'
                 )
@@ -117,7 +130,7 @@ class Election:
 
         response = requests.get(uri)
 
-        if (response.status_code != requests.codes.ok):
+        if response.status_code != requests.codes.ok:
             raise Exception(
                 'Unable to make successful request'
             )
@@ -153,6 +166,12 @@ class Election:
     Begins election process
     """
     def _vote(self):
+        # Setup direction of voting based on election switch
+        if self.isElectable is True:
+            direction = 1
+        else:
+            direction = -1
+
         for username, password in self.voters.items():
             if self._login(username, password) is True:
                 for comment in self.comments:
@@ -165,10 +184,10 @@ class Election:
 
                     request = {
                         'id': comment['data']['name'],
-                        'dir': 1,
+                        'dir': direction,
                         'r': comment['data']['subreddit'],
                         'uh': self.client.modhash,
-                        }
+                    }
 
                     self.client.post(
                         Election.DOMAIN + '/api/vote',
@@ -219,7 +238,7 @@ class Election:
                     data=request
                 )
 
-                if (response.status_code != requests.codes.ok):
+                if response.status_code != requests.codes.ok:
                     raise Exception(
                         'Unable to make successful request'
                     )
@@ -260,18 +279,39 @@ def main():
         '--voters',
         dest='voters',
         action='store',
-        help='--voters voter1:password,voter2:password}'
+        help='--voters voter1:password,voter2:password'
     )
-
+    parser.add_argument(
+        '--elect',
+        dest='elect',
+        default='1',
+        action='store',
+        help='--elect 1'
+    )
     # Parse passed arguments for processing
     arguments = parser.parse_args()
+
+    if (arguments.candidate is None) or (arguments.voters is None):
+        print(
+            'You must pass target candidate and voter credentials. ' +
+            'Please see --help for more information'
+        )
+        return True
 
     # Setup election
     election = Election()
     election.setCandidate(arguments.candidate)
+    election.elect(arguments.elect)
 
     # Process voters
     voters = arguments.voters.split(',')
+
+    if len(voters) == 0:
+        print(
+            'Voters must be passed in username:password format. ' +
+            'Please see --help for more information'
+        )
+        return True
 
     for voter in voters:
         (username, password) = voter.split(':')
