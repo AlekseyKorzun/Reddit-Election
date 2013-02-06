@@ -2,7 +2,7 @@
 
 __author__ = "Aleksey Korzun"
 __email__ = "al.ko@webfoundation.net"
-__credits__ = ["Aleksey Korzun", "Elliot Carlson"]
+__credits__ = ["Aleksey Korzun", "Elliott Carlson"]
 __license__ = "GPL"
 __version__ = "1.0"
 
