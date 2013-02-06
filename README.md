@@ -11,5 +11,7 @@ Usage
 Simply run the election.py with --target and --voters arguments. For example: 
 
 ```
-python election.py --target username --voters voter1:password,voter2:password
+python election.py --candidate username --voters voter1:password,voter2:password
 ```
+
+By default the script will 'elect' candidate by upvoting his/her comments, you can switch to downvoting by passing an --elect 0 argument
